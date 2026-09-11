@@ -1,5 +1,9 @@
 # RomM 汉化工作台
 
+<p align="center">
+  <img src="assets/icon-512.png" alt="RomM 汉化工作台" width="128" height="128" />
+</p>
+
 面向自建游戏库 [RomM](https://github.com/rommapp/romm) 的本地汉化工具：直连 RomM 底层 MariaDB，在网页里批量用 AI 翻译游戏名称与简介，并写回数据库；同时提供封面缓存、封面 URL 修改与本地图片上传。
 
 > 仅建议在本机或可信局域网使用。更新类接口无鉴权，请勿直接暴露到公网。
@@ -22,6 +26,20 @@
 | 前端 | 原生 HTML / CSS / JS（零构建） |
 | 翻译 | OpenAI 兼容 Chat Completions |
 | 可选桌面壳 | Python · pywebview · PyInstaller（`desktop.py`） |
+
+## 下载（Release）
+
+打 `v*` 标签后，GitHub Actions 会在 Windows 环境自动打包桌面版，并把 zip 挂到 [Releases](https://github.com/dkl070418/Romm-Rom-Translator/releases)。
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+产物：`RomMTranslator-win64-v*.zip`（含 `RomMTranslator.exe`、内置 Node、前端与 `.env.example`）。  
+解压后把 `.env.example` 复制为 `.env` 填好配置，双击 EXE 即可。
+
+也可以在 Actions 页手动触发 **Build Windows EXE**（`workflow_dispatch`），artifact 可下载，但不会自动创建 Release。
 
 ## 快速开始
 
@@ -140,6 +158,9 @@ romm-translator/
 ├── public/index.html         # 单页前端
 ├── start.bat / start.js      # Windows 一键启动
 ├── desktop.py                # 可选桌面壳
+├── RomMTranslator.spec       # PyInstaller 打包配置（含 icon）
+├── assets/icon.ico           # 应用图标
+├── .github/workflows/        # Windows EXE 自动打包
 ├── tests/smoke.js            # 冒烟测试
 ├── .env.example              # 配置模板
 └── translate-config.example.json
