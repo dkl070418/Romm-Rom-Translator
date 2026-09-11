@@ -168,4 +168,4 @@ romm-translator/
 
 ## License
 
-ISC
+[Apache License 2.0](LICENSE)
