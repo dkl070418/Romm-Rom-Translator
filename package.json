@@ -1,0 +1,20 @@
+{
+  "name": "romm-translator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/smoke.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "https-proxy-agent": "^9.1.0",
+    "mysql2": "^3.23.2",
+    "node-fetch": "^2.7.0"
+  }
+}

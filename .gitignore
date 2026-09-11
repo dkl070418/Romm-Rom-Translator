@@ -1,0 +1,41 @@
+# 环境变量(含数据库/RomM/IGDB 密码与密钥,绝不入库)
+.env
+.env.local
+.env.*.local
+
+# 运行时写入的本地配置(含 API Key / 代理地址)
+translate-config.json
+proxy-config.json
+
+# 本地交接文档(含真实凭据,仅本机使用)
+HANDOVER-LOCAL.md
+LOCAL-SECRETS.md
+
+# 依赖
+node_modules/
+
+# 运行时缓存(封面磁盘缓存)
+cache/
+
+# 备份
+backup-*/
+
+# Reasonix 内部工作目录
+.reasonix/
+
+# 桌面打包产物(内含拷贝的 .env / server,勿入库)
+dist/
+build/
+__pycache__/
+*.pyc
+
+# 日志
+*.log
+npm-debug.log*
+
+# 便携内置 Node 运行时
+node/
+
+# 系统文件
+.DS_Store
+Thumbs.db

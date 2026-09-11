@@ -1,0 +1,1831 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RomM 游戏元数据汉化工作台 (宽屏网格版)</title>
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #cbd5e1;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --radius: 10px;
+      --shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      padding-bottom: 60px;
+    }
+
+    /* 顶部导航 */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand h1 { font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+    .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+    .search-box input, select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.88rem;
+      outline: none;
+      background: white;
+    }
+    .search-box input:focus, select:focus { border-color: var(--primary); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 12px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: white; border: 1px solid var(--border-color); color: var(--text-main); }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-export { background: #8b5cf6; color: white; }
+    .btn-export:hover { background: #7c3aed; }
+    .btn-ai { background: #0ea5e9; color: white; }
+    .btn-ai:hover { background: #0284c7; }
+    .btn-ai:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-icon { padding: 4px 8px; font-size: 0.78rem; background: #e2e8f0; border-radius: 4px; border: none; cursor: pointer; }
+    .btn-icon:hover { background: #cbd5e1; }
+
+    /* 数据库连接栏 */
+    .conn-bar {
+      background: #eef2ff;
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+    }
+    .conn-bar input {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: auto;
+    }
+    .conn-host { width: 150px; }
+    .conn-port { width: 70px; }
+    .conn-user { width: 110px; }
+    .conn-pass { width: 130px; }
+    .conn-db { width: 120px; }
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+    .conn-status { font-weight: 700; color: var(--text-muted); }
+    .conn-status.ok { color: #059669; }
+    .conn-status.err { color: #dc2626; }
+
+    /* 全屏宽屏主容器 */
+    main { max-width: 1800px; margin: 16px auto; padding: 0 16px; }
+
+    /* 批量控制栏 */
+    .batch-bar {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+    }
+    .batch-left { display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600; }
+    .checkbox-label { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .checkbox-label input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+    /* 2列/3列自适应网格布局 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+      gap: 16px;
+    }
+
+    /* 紧凑版游戏卡片 */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 24px 90px 1fr;
+      gap: 12px;
+      align-items: start;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .card:hover { border-color: #93c5fd; }
+    .card.selected { border-color: var(--primary); background: #f0f7ff; }
+    .card.modified { border-left: 6px solid var(--warning); }
+
+    .card-checkbox {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-top: 4px;
+    }
+    .card-checkbox input { width: 18px; height: 18px; cursor: pointer; pointer-events: none; }
+
+    .cover-container {
+      width: 90px;
+      height: 120px;
+      background: #e2e8f0;
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-color);
+    }
+    .cover-container img { width: 100%; height: 100%; object-fit: cover; }
+    .cover-placeholder { color: var(--text-muted); font-size: 0.75rem; font-weight: 600; text-align: center; }
+
+    .card-content { display: flex; flex-direction: column; gap: 10px; cursor: default; }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 6px;
+    }
+
+    .rom-id {
+      font-size: 0.75rem;
+      font-family: monospace;
+      background: #e2e8f0;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    .rom-title-en {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+
+    /* 手动标记已翻译状态标签 */
+    .status-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      border: 1px solid transparent;
+      transition: all 0.15s;
+    }
+    .status-untranslated { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .status-translated { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .badge-draft { background: #fef3c7; color: #92400e; font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      user-select: text;
+    }
+
+    textarea {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      height: 65px;
+      resize: vertical;
+      user-select: text;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      background: #ffffff;
+    }
+
+    .original-summary {
+      font-size: 0.8rem;
+      line-height: 1.35;
+      color: #475569;
+      background: #f1f5f9;
+      padding: 6px 10px;
+      border-radius: 6px;
+      max-height: 55px;
+      overflow-y: auto;
+      user-select: text;
+    }
+
+    .card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-top: 6px;
+    }
+    .card-footer .btn {
+      width: 100%;
+      justify-content: center;
+      height: 34px;
+      line-height: 1;
+      box-sizing: border-box;
+    }
+    .footer-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+    }
+    .footer-row .btn { flex: 1; }
+
+    /* 上传封面弹窗 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      width: 420px;
+      max-width: calc(100vw - 32px);
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 800;
+      font-size: 1rem;
+    }
+    .modal-body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .upload-target-name {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      background: #f1f5f9;
+      border-radius: 6px;
+      padding: 8px 10px;
+      word-break: break-all;
+    }
+    .drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: 10px;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      transition: all 0.15s;
+      overflow: hidden;
+      position: relative;
+      background: #f8fafc;
+      user-select: none;
+    }
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: #eff6ff;
+      color: var(--primary);
+    }
+    .drop-zone img {
+      max-width: 100%;
+      max-height: 280px;
+      object-fit: contain;
+    }
+    .upload-status { font-size: 0.85rem; font-weight: 600; text-align: center; min-height: 1.2em; }
+    .upload-status.ok { color: var(--success); }
+    .upload-status.err { color: #dc2626; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 14px 18px;
+      border-top: 1px solid var(--border-color);
+    }
+
+    /* 搜索封面弹窗 */
+    .search-modal { width: 850px; max-width: calc(100vw - 32px); }
+    .search-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .search-bar input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .search-bar input:focus { border-color: var(--primary); outline: none; }
+    .search-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding: 4px 0;
+    }
+    .search-result-item {
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .search-result-item:hover { border-color: var(--primary); transform: scale(1.03); }
+    .search-result-item img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      display: block;
+      background: #e2e8f0;
+    }
+    .search-result-item .source-tag {
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      background: rgba(0,0,0,0.65);
+      color: white;
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .search-result-item .platform-tags {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .search-result-item .platform-tag {
+      background: rgba(37, 99, 235, 0.85);
+      color: white;
+      font-size: 0.6rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 700;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .search-result-item .result-name {
+      font-size: 0.75rem;
+      padding: 6px;
+      line-height: 1.3;
+      color: var(--text-main);
+      background: white;
+      word-break: break-word;
+    }
+    .search-status {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 20px 0;
+      min-height: 2.4em;
+    }
+    .search-status.loading { color: var(--primary); }
+    .search-status.error { color: #dc2626; }
+    .search-status.empty { color: var(--text-muted); }
+
+    /* 翻译设置面板 */
+    .settings-toggle {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      background: #f1f5f9;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .settings-toggle:hover { background: #e2e8f0; }
+    .settings-panel {
+      position: fixed;
+      top: 56px;
+      right: 24px;
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      padding: 16px;
+      z-index: 200;
+      width: 380px;
+      max-width: calc(100vw - 48px);
+      display: none;
+    }
+    .settings-panel.open { display: block; }
+    .settings-panel h3 {
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      color: var(--text-main);
+    }
+    .settings-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+    .settings-row label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .settings-row input {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+    .settings-row input:focus { border-color: var(--primary); outline: none; }
+    .settings-hint {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: -6px;
+      margin-bottom: 10px;
+    }
+    .settings-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .settings-status {
+      font-size: 0.8rem;
+      margin-top: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      display: none;
+    }
+    .settings-status.show { display: block; }
+    .settings-status.ok { background: #d1fae5; color: #065f46; }
+    .settings-status.err { background: #fee2e2; color: #991b1b; }
+
+    /* 搜索框内转英文按钮 */
+    .search-bar .btn-translate {
+      background: #8b5cf6;
+      color: white;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .search-bar .btn-translate:hover { background: #7c3aed; }
+    .search-bar .btn-translate:disabled { opacity: 0.5; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <h1>RomM 汉化工作台</h1>
+    </div>
+    
+    <div class="controls">
+      <!-- 机种筛选 -->
+      <select id="filter-platform" onchange="resetAndRender()">
+        <option value="all">🎮 全部机种</option>
+      </select>
+
+      <!-- 状态筛选 -->
+      <select id="filter-status" onchange="resetAndRender()">
+        <option value="all">🌐 全部游戏</option>
+        <option value="untranslated" selected>❌ 仅显示未翻译</option>
+        <option value="translated">✅ 仅显示已翻译</option>
+      </select>
+
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="🔍 搜索名称..." oninput="resetAndRender()">
+      </div>
+
+      <button class="settings-toggle" onclick="toggleSettingsPanel()" title="翻译 API 设置">⚙️ 翻译设置</button>
+      <button class="btn btn-secondary" onclick="loadRoms()">🔄 获取数据</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('import-file-input').click()">📥 导入 JSON</button>
+      <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="importJSON(event)">
+
+      <button class="btn btn-primary" onclick="saveAllModified()">💾 保存改动到数据库</button>
+    </div>
+  </header>
+
+  <!-- 数据库连接栏:浏览器无法直连 MariaDB,由本地后端代理连接 -->
+  <div class="conn-bar" id="conn-bar">
+    <span>🛢️ MariaDB:</span>
+    <input type="text" class="conn-host" id="conn-host" placeholder="主机 IP" title="MariaDB 主机地址">
+    <input type="text" class="conn-port" id="conn-port" placeholder="端口" value="3333" title="MariaDB 端口">
+    <input type="text" class="conn-user" id="conn-user" placeholder="用户名" autocomplete="off">
+    <input type="password" class="conn-pass" id="conn-pass" placeholder="密码" autocomplete="off">
+    <input type="text" class="conn-db" id="conn-db" placeholder="数据库名" value="romm">
+    <button class="btn btn-primary btn-sm" onclick="connectDb()">🔌 连接</button>
+    <button class="btn btn-secondary btn-sm" onclick="disconnectDb()">⏻ 断开</button>
+    <button class="btn btn-secondary btn-sm" onclick="clearSavedConn()" title="清除浏览器保存的连接参数并清空表单">🧹 清除保存</button>
+    <span class="conn-status" id="conn-status">未连接</span>
+  </div>
+
+  <!-- 翻译设置面板 -->
+  <div class="settings-panel" id="settings-panel">
+    <h3>⚙️ 翻译 API 设置</h3>
+    <div class="settings-row">
+      <label>API 地址</label>
+      <input type="text" id="cfg-base-url" placeholder="https://api.deepseek.com/v1">
+    </div>
+    <div class="settings-hint">只需填基础地址,系统自动补全 /v1/chat/completions</div>
+    <div class="settings-row">
+      <label>API Key</label>
+      <input type="password" id="cfg-api-key" placeholder="sk-xxxxxxxx">
+    </div>
+    <div class="settings-row">
+      <label>模型</label>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="cfg-model" placeholder="deepseek-chat" style="flex:1;">
+        <button class="btn btn-secondary btn-sm" onclick="loadModels()" title="从 API 获取可用模型列表">🔄 刷新</button>
+      </div>
+    </div>
+    <div id="models-dropdown" style="max-height:150px; overflow-y:auto; border:1px solid var(--border-color); border-radius:6px; display:none; margin-bottom:8px;"></div>
+    <div class="settings-hint" id="cfg-resolved-url"></div>
+    <div class="settings-row">
+      <label>翻译提示词 <small style="color:#94a3b8;">(可选,留空用默认)</small></label>
+      <textarea id="cfg-prompt" rows="3" placeholder="你是游戏名称翻译专家...会自动追加平台信息" style="font-size:0.82rem; height:auto;"></textarea>
+    </div>
+    <div class="settings-hint">提示词中无需写平台信息,系统会自动根据游戏所在机种追加</div>
+    <div id="settings-status" class="settings-status"></div>
+    <div class="settings-actions">
+      <button class="btn btn-secondary btn-sm" onclick="testTranslateApi()">🧪 测试连接</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTranslateSettings()">💾 保存</button>
+    </div>
+
+    <hr style="margin:14px 0; border:none; border-top:1px solid var(--border-color);">
+
+    <h3>🌐 代理设置 (IGDB 封面搜索)</h3>
+    <div class="settings-row">
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="cfg-proxy-enabled" style="width:16px; height:16px;">
+        启用代理访问 IGDB
+      </label>
+    </div>
+    <div class="settings-row">
+      <label>代理地址</label>
+      <input type="text" id="cfg-proxy-host" placeholder="127.0.0.1">
+    </div>
+    <div class="settings-row">
+      <label>代理端口</label>
+      <input type="text" id="cfg-proxy-port" placeholder="10808">
+    </div>
+    <div class="settings-hint">支持 HTTP 代理,填地址和端口后保存即可</div>
+    <div id="proxy-status" class="settings-status"></div>
+    <div class="settings-actions">
+      <button class="btn btn-secondary btn-sm" onclick="testProxy()">🧪 测试代理</button>
+      <button class="btn btn-primary btn-sm" onclick="saveProxySettings()">💾 保存</button>
+    </div>
+  </div>
+
+  <main>
+    <div class="batch-bar">
+      <div class="batch-left">
+        <label class="checkbox-label">
+          <input type="checkbox" id="select-all-checkbox" onchange="toggleSelectAll(this.checked)">
+          <span>全选当前页</span>
+        </label>
+        <span style="color: var(--border-color)">|</span>
+        <span>已选中: <strong id="stat-selected" style="color: var(--primary)">0</strong> 项</span>
+        <span style="color: var(--border-color)">|</span>
+        <span>待保存: <strong id="stat-modified" style="color: var(--warning)">0</strong> 项</span>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-ai" onclick="aiTranslateSelected()" id="btn-ai-translate" title="调用翻译 API,自动翻译选中项的名称与简介(结果先在前端预览,确认后保存)">🤖 AI 翻译选中项</button>
+        <button class="btn btn-export" onclick="exportSelectedJSON()">📤 导出选中项 JSON</button>
+        <button class="btn btn-secondary" style="font-size:0.78rem; color:#64748b;" onclick="clearLocalStatusCache()" title="清除本浏览器保存的所有标记记录">🧹 清除本地标记缓存</button>
+      </div>
+    </div>
+
+    <div class="grid" id="rom-grid"></div>
+  </main>
+
+  <!-- 上传封面弹窗 -->
+  <div class="modal-overlay" id="upload-modal" style="display:none;" onclick="closeUploadModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span>🖼️ 上传封面</span>
+        <button class="btn-icon" onclick="closeUploadModal()" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-target-name" id="upload-target-name"></div>
+        <div class="drop-zone" id="drop-zone"
+             onclick="document.getElementById('upload-file-input').click()"
+             title="拖拽图片到此处,或点击选择图片">
+          <div id="drop-zone-hint">📂 将图片拖到此处<br>或点击选择图片<br><small style="opacity:0.7;">(不超过 5MB)</small></div>
+          <img id="upload-preview" style="display:none;" alt="封面预览">
+        </div>
+        <div id="upload-status" class="upload-status"></div>
+        <input type="file" id="upload-file-input" accept="image/*" style="display:none;" onchange="onUploadFileSelected(event)">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeUploadModal()">取消</button>
+        <button class="btn btn-primary" id="btn-do-upload" disabled onclick="doUpload()">⬆ 上传</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 搜索封面弹窗 -->
+  <div class="modal-overlay" id="search-cover-modal" style="display:none;">
+    <div class="modal search-modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <span>🔍 搜索封面</span>
+        <button class="btn-icon" onclick="closeSearchCoverModal()" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="upload-target-name" id="search-target-name"></div>
+        <div class="search-bar">
+          <button class="btn-translate" onclick="translateSearchName('en')" title="翻译为英文后搜索 IGDB">🌐 英文</button>
+          <button class="btn-translate" style="background:#ec4899;" onclick="translateSearchName('ja')" title="翻译为罗马音后搜索 IGDB">🎵 罗马音</button>
+          <input type="text" id="search-cover-input" placeholder="输入游戏名称搜索..." onkeydown="if(event.key==='Enter')doSearchCover()">
+          <button class="btn btn-primary btn-sm" onclick="doSearchCover()" id="btn-do-search">🔍 搜索</button>
+        </div>
+        <div id="search-cover-status" class="search-status"></div>
+        <div class="search-results" id="search-results"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeSearchCoverModal()">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LOCAL_STORAGE_KEY = 'romm_manual_translated_map_v1';
+
+    let rawRoms = [];
+    let modifiedIds = new Set();
+    let selectedIds = new Set();
+    let lastCheckedIndex = -1; // 用于记录 Shift 范围选中的起始索引
+
+    // 1. 本地存储读取逻辑 (localStorage)
+    function loadManualMapFromStorage() {
+      try {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (stored) {
+          return new Map(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error('读取 localStorage 失败', e);
+      }
+      return new Map();
+    }
+
+    // 2. 本地存储写入逻辑
+    function saveManualMapToStorage() {
+      try {
+        const arr = Array.from(manualTranslatedMap.entries());
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(arr));
+      } catch (e) {
+        console.error('写入 localStorage 失败', e);
+      }
+    }
+
+    let manualTranslatedMap = loadManualMapFromStorage();
+
+    // ============ 数据库连接管理 ============
+    const CONN_STORAGE_KEY = 'romm_db_conn_v1';
+
+    function loadConnFromStorage() {
+      try {
+        const s = localStorage.getItem(CONN_STORAGE_KEY);
+        return s ? JSON.parse(s) : null;
+      } catch (e) { return null; }
+    }
+
+    function saveConnToStorage(cfg) {
+      try { localStorage.setItem(CONN_STORAGE_KEY, JSON.stringify(cfg)); } catch (e) {}
+    }
+
+    function fillConnForm(cfg) {
+      if (!cfg) return;
+      document.getElementById('conn-host').value = cfg.host || '';
+      document.getElementById('conn-port').value = cfg.port || '';
+      document.getElementById('conn-user').value = cfg.user || '';
+      document.getElementById('conn-pass').value = cfg.password || '';
+      document.getElementById('conn-db').value = cfg.database || '';
+    }
+
+    function setConnStatus(text, cls) {
+      const el = document.getElementById('conn-status');
+      el.textContent = text;
+      el.className = 'conn-status ' + (cls || '');
+    }
+
+    // silent=true 时失败不弹窗(用于自动连接)
+    async function connectDb(silent) {
+      const cfg = {
+        host: document.getElementById('conn-host').value.trim(),
+        port: document.getElementById('conn-port').value.trim() || '3306',
+        user: document.getElementById('conn-user').value.trim(),
+        password: document.getElementById('conn-pass').value,
+        database: document.getElementById('conn-db').value.trim()
+      };
+      if (!cfg.host || !cfg.user || !cfg.database) {
+        if (!silent) alert('请填写主机、用户名和数据库名');
+        return;
+      }
+      setConnStatus('连接中...', '');
+      try {
+        const res = await fetch('/api/connect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cfg)
+        });
+        const json = await res.json();
+        if (json.success) {
+          saveConnToStorage(cfg);
+          setConnStatus(`✅ 已连接 ${cfg.host}:${cfg.port}/${cfg.database}(${json.total_in_db} 条 ROM)`, 'ok');
+          await loadRoms();
+        } else {
+          setConnStatus('❌ ' + (json.message || '连接失败'), 'err');
+          if (!silent) alert('连接失败: ' + json.message);
+        }
+      } catch (e) {
+        setConnStatus('❌ 网络错误', 'err');
+        if (!silent) alert('网络请求异常: ' + e.message);
+      }
+    }
+
+    async function disconnectDb() {
+      try { await fetch('/api/disconnect', { method: 'POST' }); } catch (e) {}
+      setConnStatus('未连接', '');
+      rawRoms = [];
+      modifiedIds.clear();
+      selectedIds.clear();
+      lastCheckedIndex = -1;
+      updateStats();
+      renderCards();
+    }
+
+    // 清除浏览器保存的连接参数(不影响后端已建立的连接)
+    function clearSavedConn() {
+      localStorage.removeItem(CONN_STORAGE_KEY);
+      ['conn-host', 'conn-port', 'conn-user', 'conn-pass', 'conn-db'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+      setConnStatus('已清除保存的连接参数', '');
+    }
+
+    // 设置封面图片 URL(走 RomM 官方 API 更新,安全)
+    async function changeCoverUrl(id, event) {
+      if (event) event.stopPropagation();
+      const item = rawRoms.find(r => r.id === id);
+      if (!item) return;
+      const url = prompt('输入封面图片 URL(将同步更新到 RomM):', item.url_cover || 'https://');
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url)) {
+        alert('URL 必须以 http(s):// 开头');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/roms/${id}/cover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const json = await res.json();
+        if (json.success) {
+          alert('封面 URL 已更新!');
+          await loadRoms();
+        } else {
+          alert('更新失败: ' + json.message);
+        }
+      } catch (e) {
+        alert('网络请求异常: ' + e.message);
+      }
+    }
+
+    // ============ 上传封面弹窗(拖拽 / 点击选图) ============
+    let uploadTargetId = null;
+    let uploadTargetFile = null;
+
+    function openUploadModal(id, event) {
+      if (event) event.stopPropagation();
+      const item = rawRoms.find(r => r.id === id);
+      uploadTargetId = id;
+      uploadTargetFile = null;
+      document.getElementById('upload-target-name').textContent =
+        `目标游戏 ID: ${id}${item ? ' · ' + item.name : ''}`;
+      document.getElementById('upload-preview').style.display = 'none';
+      document.getElementById('drop-zone-hint').style.display = '';
+      document.getElementById('upload-status').textContent = '';
+      document.getElementById('upload-status').className = 'upload-status';
+      document.getElementById('btn-do-upload').disabled = true;
+      document.getElementById('upload-file-input').value = '';
+      document.getElementById('upload-modal').style.display = 'flex';
+    }
+
+    function closeUploadModal(event) {
+      if (event) event.stopPropagation();
+      document.getElementById('upload-modal').style.display = 'none';
+      uploadTargetId = null;
+      uploadTargetFile = null;
+    }
+
+    function onUploadFileSelected(event) {
+      const file = event.target.files && event.target.files[0];
+      if (file) setUploadFile(file);
+    }
+
+    function setUploadFile(file) {
+      const hint = document.getElementById('drop-zone-hint');
+      const preview = document.getElementById('upload-preview');
+      const status = document.getElementById('upload-status');
+      const btn = document.getElementById('btn-do-upload');
+      status.className = 'upload-status';
+      if (!file.type.startsWith('image/')) {
+        status.className = 'upload-status err';
+        status.textContent = '请选择图片文件';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        status.className = 'upload-status err';
+        status.textContent = '图片不能超过 5MB';
+        return;
+      }
+      uploadTargetFile = file;
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = String(reader.result);
+        preview.style.display = 'block';
+        hint.style.display = 'none';
+        btn.disabled = false;
+        status.textContent = `已选择: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    async function doUpload() {
+      if (!uploadTargetId || !uploadTargetFile) return;
+      const status = document.getElementById('upload-status');
+      const btn = document.getElementById('btn-do-upload');
+      btn.disabled = true;
+      status.className = 'upload-status';
+      status.textContent = '上传中...';
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result).split(',')[1]);
+          reader.onerror = () => reject(new Error('读取文件失败'));
+          reader.readAsDataURL(uploadTargetFile);
+        });
+        const res = await fetch(`/api/roms/${uploadTargetId}/cover/upload`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_base64: base64, file_name: uploadTargetFile.name })
+        });
+        let json;
+        try {
+          json = await res.json();
+        } catch (e) {
+          throw new Error(`HTTP ${res.status} ${res.statusText},请检查图片大小或服务器日志`);
+        }
+        if (!json.success) throw new Error(json.message || '上传失败');
+        status.className = 'upload-status ok';
+        status.textContent = '✅ 上传成功,正在刷新...';
+        setTimeout(() => {
+          closeUploadModal();
+          loadRoms();
+        }, 600);
+      } catch (e) {
+        status.className = 'upload-status err';
+        status.textContent = '❌ ' + e.message;
+        btn.disabled = false;
+      }
+    }
+
+    // 拖拽支持:拖入图片时高亮区域,松开时取文件
+    (function bindDropZone() {
+      const zone = document.getElementById('drop-zone');
+      ['dragenter', 'dragover'].forEach(ev => {
+        zone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          zone.classList.add('dragover');
+        });
+      });
+      ['dragleave', 'drop'].forEach(ev => {
+        zone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          zone.classList.remove('dragover');
+        });
+      });
+      zone.addEventListener('drop', (e) => {
+        const file = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (file) setUploadFile(file);
+      });
+    })();
+
+    // 卡片按钮入口:打开上传弹窗
+    function uploadCover(id, event) {
+      openUploadModal(id, event);
+    }
+
+    // 页面初始化:服务已用 .env 自动连接则直接加载;否则用记忆的参数自动连接
+    async function initConnection() {
+      try {
+        const res = await fetch('/api/connection');
+        const json = await res.json();
+        if (json.connected && json.info) {
+          setConnStatus(`✅ 已连接 ${json.info.host}:${json.info.port}/${json.info.database}`, 'ok');
+          await loadRoms();
+          return;
+        }
+      } catch (e) { /* 服务未就绪 */ }
+      const saved = loadConnFromStorage();
+      if (saved) {
+        fillConnForm(saved);
+        await connectDb(true);
+      }
+    }
+
+    // 加载服务器数据
+    async function loadRoms() {
+      try {
+        const res = await fetch('/api/roms');
+        const json = await res.json();
+        if (json.success) {
+          rawRoms = json.data.map(item => ({
+            ...item,
+            // 备份加载时的原文,防止保存后英文原版丢失
+            originalName: item.name,
+            originalSummary: item.summary || '',
+            translatedName: item.name,
+            translatedSummary: item.summary || ''
+          }));
+          modifiedIds.clear();
+          selectedIds.clear();
+          lastCheckedIndex = -1;
+          updatePlatformFilter();
+          updateStats();
+          renderCards();
+        } else {
+          if (res.status === 401) {
+            setConnStatus('⚠️ ' + json.message, 'err');
+            alert(json.message);
+          } else {
+            alert('数据加载失败: ' + json.message);
+          }
+        }
+      } catch (e) {
+        alert('请检查后端 server.js 是否正常启动');
+      }
+    }
+
+    // 判断某游戏是否已翻译
+    function containsCJK(str) {
+      return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(str || '');
+    }
+
+    function checkIsTranslated(item) {
+      // 手动标记优先
+      if (manualTranslatedMap.has(item.id)) {
+        return manualTranslatedMap.get(item.id);
+      }
+      // 否则按内容是否含中文字符判定(比对比 name 更可靠)
+      return containsCJK(item.translatedName) || containsCJK(item.translatedSummary);
+    }
+
+    // 手动切换状态并保存
+    function toggleTranslatedStatus(id, event) {
+      if (event) event.stopPropagation(); // 阻止触发卡片勾选
+      const item = rawRoms.find(r => r.id === id);
+      if (!item) return;
+
+      const currentStatus = checkIsTranslated(item);
+      manualTranslatedMap.set(id, !currentStatus);
+      saveManualMapToStorage();
+      renderCards();
+    }
+
+    // 清除本地标记记录
+    function clearLocalStatusCache() {
+      if (confirm('确定要清空本地浏览器记忆的手动标记状态吗？（不会影响 MariaDB 数据库）')) {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
+        manualTranslatedMap.clear();
+        renderCards();
+      }
+    }
+
+    // 导出选中项
+    function exportSelectedJSON() {
+      if (selectedIds.size === 0) {
+        alert('请先勾选需要导出的游戏！');
+        return;
+      }
+
+      const exportData = rawRoms
+        .filter(r => selectedIds.has(r.id))
+        .map(r => ({
+          id: r.id,
+          original_name: r.originalName || r.name,
+          translated_name: r.translatedName || r.name,
+          original_summary: r.originalSummary || r.summary || '',
+          translated_summary: r.translatedSummary || r.summary || ''
+        }));
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `romm_export_${selectedIds.size}_items.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // 导入 JSON 到前端预览
+    function importJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedItems = JSON.parse(e.target.result);
+          if (!Array.isArray(importedItems)) {
+            alert('格式错误，必须为 JSON 数组！');
+            return;
+          }
+
+          let updatedCount = 0;
+          importedItems.forEach(imp => {
+            const item = rawRoms.find(r => r.id === imp.id);
+            if (item) {
+              let hasChanged = false;
+
+              if (imp.translated_name && imp.translated_name !== item.translatedName) {
+                item.translatedName = imp.translated_name;
+                hasChanged = true;
+              }
+              if (imp.translated_summary && imp.translated_summary !== item.translatedSummary) {
+                item.translatedSummary = imp.translated_summary;
+                hasChanged = true;
+              }
+
+              if (hasChanged) {
+                modifiedIds.add(item.id);
+                manualTranslatedMap.set(item.id, true);
+                updatedCount++;
+              }
+            }
+          });
+
+          saveManualMapToStorage();
+          updateStats();
+          renderCards();
+          alert(`导入成功！已填入 ${updatedCount} 条译名。请检查满意后点击“保存改动到数据库”。`);
+        } catch (err) {
+          alert('解析 JSON 文件失败: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // 根据数据库 platforms 表返回的数据动态生成机种筛选项
+    function updatePlatformFilter() {
+      const select = document.getElementById('filter-platform');
+      const previousValue = select.value;
+      const platforms = new Map();
+      rawRoms.forEach(r => {
+        if (r.platform_id != null) {
+          platforms.set(String(r.platform_id), r.platform_name || r.platform_slug || `机种 ${r.platform_id}`);
+        }
+      });
+      select.innerHTML = '<option value="all">🎮 全部机种</option>' +
+        Array.from(platforms.entries())
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, name]) => `<option value="${id}">${escapeHtml(name)}</option>`)
+          .join('');
+      if (previousValue === 'all' || platforms.has(previousValue)) {
+        select.value = previousValue;
+      }
+    }
+
+    // 筛选逻辑
+    function getFilteredRoms() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      const filterPlatform = document.getElementById('filter-platform').value;
+      const filterStatus = document.getElementById('filter-status').value;
+
+      return rawRoms.filter(r => {
+        const matchSearch = r.name.toLowerCase().includes(query) || 
+                            (r.translatedName && r.translatedName.toLowerCase().includes(query));
+        
+        const matchPlatform = filterPlatform === 'all' || String(r.platform_id) === filterPlatform;
+
+        const isTrans = checkIsTranslated(r);
+        let matchStatus = true;
+        if (filterStatus === 'untranslated') matchStatus = !isTrans;
+        if (filterStatus === 'translated') matchStatus = isTrans;
+
+        return matchSearch && matchPlatform && matchStatus;
+      });
+    }
+
+    function resetAndRender() {
+      lastCheckedIndex = -1;
+      renderCards();
+    }
+
+    function toggleSelectAll(checked) {
+      const currentFiltered = getFilteredRoms();
+      currentFiltered.forEach(r => {
+        if (checked) selectedIds.add(r.id);
+        else selectedIds.delete(r.id);
+      });
+      lastCheckedIndex = -1;
+      updateStats();
+      renderCards();
+    }
+
+    // 处理卡片点击逻辑（支持范围 Shift 连选 & 过滤互动元素）
+    function handleCardClick(event, id, index) {
+      // 如果点击的是输入框、文本域、按钮、或状态标签，不触发选框勾选
+      const ignoreTags = ['INPUT', 'TEXTAREA', 'BUTTON'];
+      if (ignoreTags.includes(event.target.tagName) || event.target.closest('.status-toggle') || event.target.closest('.btn-icon')) {
+        return;
+      }
+
+      const filteredList = getFilteredRoms();
+      const isSelected = selectedIds.has(id);
+      const targetState = !isSelected;
+
+      // 判断是否触发 Shift 连续选择
+      if (event.shiftKey && lastCheckedIndex !== -1 && lastCheckedIndex < filteredList.length) {
+        const start = Math.min(lastCheckedIndex, index);
+        const end = Math.max(lastCheckedIndex, index);
+
+        for (let i = start; i <= end; i++) {
+          const targetId = filteredList[i].id;
+          if (targetState) {
+            selectedIds.add(targetId);
+          } else {
+            selectedIds.delete(targetId);
+          }
+        }
+      } else {
+        // 单选逻辑
+        if (targetState) {
+          selectedIds.add(id);
+        } else {
+          selectedIds.delete(id);
+        }
+        lastCheckedIndex = index;
+      }
+
+      updateStats();
+      renderCards();
+    }
+
+    // 渲染网格
+    function renderCards() {
+      const grid = document.getElementById('rom-grid');
+      const filtered = getFilteredRoms();
+
+      const allSelected = filtered.length > 0 && filtered.every(r => selectedIds.has(r.id));
+      document.getElementById('select-all-checkbox').checked = allSelected;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 60px; font-size:1.1rem; color: var(--text-muted);">未找到符合条件的游戏</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((item, index) => {
+        const isModified = modifiedIds.has(item.id);
+        const isSelected = selectedIds.has(item.id);
+        const isTranslated = checkIsTranslated(item);
+        const coverUrl = item.cover_small || null;
+
+        return `
+          <div class="card ${isSelected ? 'selected' : ''} ${isModified ? 'modified' : ''}" 
+               id="card-${item.id}" 
+               onclick="handleCardClick(event, ${item.id}, ${index})">
+            
+            <div class="card-checkbox">
+              <input type="checkbox" ${isSelected ? 'checked' : ''}>
+            </div>
+
+            <div class="cover-container">
+              ${coverUrl 
+                ? `<img src="${coverUrl}" alt="Cover" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'cover-placeholder\\'>封面失败</div>'">`
+                : `<div class="cover-placeholder">ID: ${item.id}<br>无封面</div>`}
+            </div>
+
+            <div class="card-content">
+              <div class="card-header">
+                <div>
+                  <span class="rom-id">ID: ${item.id}</span>
+                  <div class="rom-title-en">${escapeHtml(item.name)}</div>
+                </div>
+                <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+                  <span class="status-toggle ${isTranslated ? 'status-translated' : 'status-untranslated'}" 
+                        onclick="toggleTranslatedStatus(${item.id}, event)"
+                        title="点击手动切换状态 (存入本地浏览器)">
+                    ${isTranslated ? '✅ 已翻译' : '❌ 未翻译'}
+                  </span>
+                  ${isModified ? '<span class="badge-draft">未保存</span>' : ''}
+                </div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">
+                  <span>中文译名</span>
+                  <button class="btn-icon" onclick="copyToClipboard('${escapeJs(item.name)}')">📋 英文</button>
+                </div>
+                <input type="text" 
+                       value="${escapeHtml(item.translatedName)}" 
+                       placeholder="输入中文译名..."
+                       oninput="onInputChanged(${item.id}, 'translatedName', this.value)">
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">
+                  <span>英文简介原文</span>
+                  ${item.summary ? `<button class="btn-icon" onclick="copyToClipboard('${escapeJs(item.summary)}')">📋 简介</button>` : ''}
+                </div>
+                <div class="original-summary">${escapeHtml(item.summary || '暂无英文简介')}</div>
+              </div>
+
+              <div class="field-group">
+                <div class="field-label">中文简介</div>
+                <textarea placeholder="输入中文简介..." 
+                          oninput="onInputChanged(${item.id}, 'translatedSummary', this.value)">${escapeHtml(item.translatedSummary)}</textarea>
+              </div>
+
+              <div class="card-footer">
+                <button class="btn ${isModified ? 'btn-success' : 'btn-secondary'}" 
+                        onclick="saveSingle(${item.id}, event)">
+                  💾 保存单条
+                </button>
+                <div class="footer-row">
+                  <button class="btn btn-secondary" 
+                          onclick="searchCover(${item.id}, event)" title="搜索游戏封面并应用">
+                    🔍 搜索封面
+                  </button>
+                  <button class="btn btn-secondary" 
+                          onclick="changeCoverUrl(${item.id}, event)" title="设置封面图片 URL(同步更新到 RomM)">
+                    🌐 封面URL
+                  </button>
+                  <button class="btn btn-secondary" 
+                          onclick="uploadCover(${item.id}, event)" title="上传本地图片作为封面(同步更新到 RomM)">
+                    🖼️ 上传
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function copyToClipboard(text) { navigator.clipboard.writeText(text); }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function escapeJs(str) {
+      return (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+    }
+
+    function onInputChanged(id, field, value) {
+      const item = rawRoms.find(r => r.id === id);
+      if (item) {
+        item[field] = value;
+        modifiedIds.add(id);
+        manualTranslatedMap.set(id, true);
+        saveManualMapToStorage();
+        updateStats();
+        
+        const card = document.getElementById(`card-${id}`);
+        if (card) {
+          card.classList.add('modified');
+          const saveBtn = card.querySelector('.card-footer .btn');
+          saveBtn.className = 'btn btn-success';
+        }
+      }
+    }
+
+    async function saveSingle(id, event) {
+      if (event) event.stopPropagation();
+      const item = rawRoms.find(r => r.id === id);
+      if (!item) return;
+
+      try {
+        const res = await fetch('/api/roms/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: [{
+              id: item.id,
+              name: item.translatedName,
+              summary: item.translatedSummary
+            }]
+          })
+        });
+
+        const json = await res.json();
+        if (json.success) {
+          modifiedIds.delete(id);
+          updateStats();
+          renderCards();
+        } else {
+          alert('保存失败: ' + json.message);
+        }
+      } catch (e) {
+        alert('网络请求异常');
+      }
+    }
+
+    async function saveAllModified() {
+      if (modifiedIds.size === 0) {
+        alert('没有被修改的项。');
+        return;
+      }
+
+      if (!confirm(`确定要将当前修改的 ${modifiedIds.size} 项数据保存写入 MariaDB 数据库吗？`)) {
+        return;
+      }
+
+      const itemsToSave = rawRoms
+        .filter(r => modifiedIds.has(r.id))
+        .map(r => ({
+          id: r.id,
+          name: r.translatedName,
+          summary: r.translatedSummary
+        }));
+
+      const res = await fetch('/api/roms/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: itemsToSave })
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        alert(`成功将 ${itemsToSave.length} 条数据写入 MariaDB！`);
+        modifiedIds.clear();
+        updateStats();
+        renderCards();
+      } else {
+        alert('保存失败: ' + json.message);
+      }
+    }
+
+    function updateStats() {
+      document.getElementById('stat-selected').innerText = selectedIds.size;
+      document.getElementById('stat-modified').innerText = modifiedIds.size;
+    }
+
+    // AI 批量翻译选中项(名称 + 简介)
+    async function aiTranslateSelected() {
+      const items = rawRoms.filter(r => selectedIds.has(r.id));
+      if (items.length === 0) {
+        alert('请先勾选需要翻译的游戏!');
+        return;
+      }
+      if (!confirm(`将对选中的 ${items.length} 款游戏调用翻译 API(每款翻译名称+简介)。确定继续?`)) return;
+
+      const btn = document.getElementById('btn-ai-translate');
+      btn.disabled = true;
+      btn.innerText = '⏳ 翻译中...';
+      try {
+        const res = await fetch('/api/translate-batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items: items.map(r => ({ id: r.id, name: r.name, summary: r.summary }))
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          let okCount = 0;
+          let failCount = 0;
+          json.data.forEach(t => {
+            const target = rawRoms.find(r => r.id === t.id);
+            if (!target) return;
+            if (t.error) { failCount++; return; }
+            if (t.translated_name) target.translatedName = t.translated_name;
+            if (t.translated_summary) target.translatedSummary = t.translated_summary;
+            modifiedIds.add(t.id);
+            manualTranslatedMap.set(t.id, true);
+            okCount++;
+          });
+          saveManualMapToStorage();
+          updateStats();
+          renderCards();
+          alert(`翻译完成:成功 ${okCount} 条,失败 ${failCount} 条。请检查后点击"保存改动到数据库"。`);
+        } else {
+          alert('翻译失败: ' + json.message);
+        }
+      } catch (e) {
+        alert('网络请求异常: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🤖 AI 翻译选中项';
+      }
+    }
+
+    // ============ 搜索封面弹窗 ============
+    let searchTargetId = null;
+
+    function searchCover(id, event) {
+      if (event) event.stopPropagation();
+      const item = rawRoms.find(r => r.id === id);
+      if (!item) return;
+      searchTargetId = id;
+      document.getElementById('search-target-name').textContent =
+        `目标: ID ${id}${item ? ' · ' + item.name : ''}`;
+      document.getElementById('search-cover-input').value = item.name || '';
+      document.getElementById('search-cover-status').textContent = '输入关键词后点击搜索';
+      document.getElementById('search-cover-status').className = 'search-status';
+      document.getElementById('search-results').innerHTML = '';
+      document.getElementById('search-cover-modal').style.display = 'flex';
+    }
+
+    function closeSearchCoverModal() {
+      document.getElementById('search-cover-modal').style.display = 'none';
+      searchTargetId = null;
+    }
+
+    async function doSearchCover() {
+      const q = document.getElementById('search-cover-input').value.trim();
+      const statusEl = document.getElementById('search-cover-status');
+      const resultsEl = document.getElementById('search-results');
+      const btn = document.getElementById('btn-do-search');
+      if (!q) { statusEl.textContent = '请输入游戏名称'; statusEl.className = 'search-status error'; return; }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ 搜索中...';
+      statusEl.textContent = '正在搜索...';
+      statusEl.className = 'search-status loading';
+      resultsEl.innerHTML = '';
+
+      try {
+        // 获取当前游戏的平台信息用于筛选
+        const item = rawRoms.find(r => r.id === searchTargetId);
+        const platform = item ? (item.platform_slug || '') : '';
+        const res = await fetch(`/api/search-covers?q=${encodeURIComponent(q)}&platform=${encodeURIComponent(platform)}`);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+
+        const data = json.data || [];
+        if (data.length === 0) {
+          let msg = '未找到封面,请尝试其他关键词';
+          if (json.warn) msg += '\n⚠️ ' + json.warn;
+          if (json.igdb_error) msg += '\n❌ IGDB 错误: ' + json.igdb_error;
+          statusEl.textContent = msg;
+          statusEl.className = 'search-status empty';
+          return;
+        }
+
+        statusEl.textContent = `找到 ${data.length} 个结果${json.cached ? ' (缓存)' : ''},点击选择`;
+        statusEl.className = 'search-status';
+
+        resultsEl.innerHTML = data.map(r => {
+          const platformTags = (r.platforms || []).slice(0, 3).map(p =>
+            `<span class="platform-tag">${escapeHtml(p)}</span>`
+          ).join('');
+          return `
+          <div class="search-result-item" onclick="applySearchCover('${escapeJs(r.url)}')" title="点击应用此封面: ${escapeHtml(r.name)}">
+            <img src="${escapeHtml(r.thumbnail || r.url)}" alt="cover" loading="lazy"
+                 onerror="this.parentNode.style.display='none'">
+            <span class="source-tag">${r.source === 'igdb' ? 'IGDB' : 'RomM'}</span>
+            <div class="platform-tags">${platformTags}</div>
+            <div class="result-name">${escapeHtml(r.name)}</div>
+          </div>
+        `}).join('');
+      } catch (e) {
+        statusEl.textContent = '搜索失败: ' + e.message;
+        statusEl.className = 'search-status error';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔍 搜索';
+      }
+    }
+
+    async function applySearchCover(url) {
+      if (!searchTargetId || !url) return;
+      const statusEl = document.getElementById('search-cover-status');
+      statusEl.textContent = '正在应用封面...';
+      statusEl.className = 'search-status loading';
+      try {
+        const res = await fetch(`/api/roms/${searchTargetId}/cover`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        statusEl.textContent = '✅ 封面已应用!';
+        statusEl.className = 'search-status';
+        setTimeout(() => {
+          closeSearchCoverModal();
+          loadRoms();
+        }, 600);
+      } catch (e) {
+        statusEl.textContent = '❌ 应用失败: ' + e.message;
+        statusEl.className = 'search-status error';
+      }
+    }
+
+    // ============ 翻译设置面板 ============
+    function toggleSettingsPanel() {
+      const panel = document.getElementById('settings-panel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) {
+        loadTranslateSettings();
+        loadProxySettings();
+      }
+    }
+
+    async function loadTranslateSettings() {
+      try {
+        const res = await fetch('/api/translate-settings');
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+        document.getElementById('cfg-base-url').value = d.baseUrl || '';
+        document.getElementById('cfg-api-key').value = '';
+        document.getElementById('cfg-api-key').placeholder = d.apiKeySet ? `已设置 (${d.apiKey})` : 'sk-xxxxxxxx';
+        document.getElementById('cfg-model').value = d.model || '';
+        document.getElementById('cfg-prompt').value = d.prompt || '';
+        const hint = document.getElementById('cfg-resolved-url');
+        hint.textContent = d.resolvedUrl ? `实际请求: ${d.resolvedUrl}` : '';
+      } catch (e) { console.error('加载翻译设置失败', e); }
+    }
+
+    async function saveTranslateSettings() {
+      const baseUrl = document.getElementById('cfg-base-url').value.trim();
+      const apiKey = document.getElementById('cfg-api-key').value.trim();
+      const model = document.getElementById('cfg-model').value.trim();
+      const prompt = document.getElementById('cfg-prompt').value.trim();
+      const statusEl = document.getElementById('settings-status');
+      try {
+        const body = {};
+        if (baseUrl) body.baseUrl = baseUrl;
+        if (apiKey) body.apiKey = apiKey;
+        if (model) body.model = model;
+        body.prompt = prompt;
+        const res = await fetch('/api/translate-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const json = await res.json();
+        if (json.success) {
+          statusEl.className = 'settings-status show ok';
+          statusEl.textContent = '✅ 设置已保存(持久化到配置文件,重启生效)';
+        } else {
+          statusEl.className = 'settings-status show err';
+          statusEl.textContent = '❌ ' + json.message;
+        }
+      } catch (e) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '❌ 保存失败: ' + e.message;
+      }
+    }
+
+    async function loadModels() {
+      const baseUrl = document.getElementById('cfg-base-url').value.trim();
+      const apiKey = document.getElementById('cfg-api-key').value.trim();
+      const dropdown = document.getElementById('models-dropdown');
+      const statusEl = document.getElementById('settings-status');
+      if (!baseUrl || !apiKey) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '请先填写 API 地址和密钥';
+        return;
+      }
+      // 先保存再获取模型列表
+      try {
+        await fetch('/api/translate-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ baseUrl, apiKey })
+        });
+      } catch {}
+      statusEl.className = 'settings-status show ok';
+      statusEl.textContent = '正在获取模型列表...';
+      try {
+        const res = await fetch('/api/translate-models');
+        const json = await res.json();
+        if (!json.success) throw new Error(json.message);
+        const models = json.data || [];
+        if (models.length === 0) {
+          dropdown.style.display = 'none';
+          statusEl.className = 'settings-status show err';
+          statusEl.textContent = '未获取到模型列表,请检查地址和密钥';
+          return;
+        }
+        statusEl.className = 'settings-status show ok';
+        statusEl.textContent = `找到 ${models.length} 个模型,点击选择`;
+        dropdown.innerHTML = models.map(m =>
+          `<div style="padding:6px 10px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid #f1f5f9;" 
+                onmouseover="this.style.background='#f0f7ff'" 
+                onmouseout="this.style.background='white'"
+                onclick="selectModel('${escapeJs(m)}')">${escapeHtml(m)}</div>`
+        ).join('');
+        dropdown.style.display = 'block';
+      } catch (e) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '❌ ' + e.message;
+      }
+    }
+
+    function selectModel(model) {
+      document.getElementById('cfg-model').value = model;
+      document.getElementById('models-dropdown').style.display = 'none';
+    }
+
+    async function testTranslateApi() {
+      const statusEl = document.getElementById('settings-status');
+      statusEl.className = 'settings-status show ok';
+      statusEl.textContent = '正在测试...';
+      try {
+        await saveTranslateSettings();
+        const res = await fetch('/api/translate-game-name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: '塞尔达传说', target: 'en', platform: 'Switch' })
+        });
+        const json = await res.json();
+        if (json.success) {
+          statusEl.className = 'settings-status show ok';
+          statusEl.textContent = `✅ 测试成功! "塞尔达传说" → "${json.result}"`;
+        } else {
+          statusEl.className = 'settings-status show err';
+          statusEl.textContent = '❌ ' + json.message;
+        }
+      } catch (e) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '❌ 测试失败: ' + e.message;
+      }
+    }
+
+    // ============ 搜索封面:翻译游戏名(支持中→英 / 中→罗马音) ============
+    async function translateSearchName(target) {
+      const input = document.getElementById('search-cover-input');
+      const text = input.value.trim();
+      if (!text) { input.focus(); return; }
+      const enBtn = document.querySelector('.btn-translate[onclick*="en"]');
+      const jaBtn = document.querySelector('.btn-translate[onclick*="ja"]');
+      const activeBtn = target === 'ja' ? jaBtn : enBtn;
+      if (enBtn) enBtn.disabled = true;
+      if (jaBtn) jaBtn.disabled = true;
+      if (activeBtn) activeBtn.textContent = '⏳ 翻译中...';
+      try {
+        const item = rawRoms.find(r => r.id === searchTargetId);
+        const platform = item ? (item.platform_name || item.platform_slug || '') : '';
+        const res = await fetch('/api/translate-game-name', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text, target, platform })
+        });
+        const json = await res.json();
+        if (json.success && json.result) {
+          input.value = json.result;
+          doSearchCover();
+        } else {
+          alert('翻译失败: ' + (json.message || '未知错误'));
+        }
+      } catch (e) {
+        alert('翻译请求异常: ' + e.message);
+      } finally {
+        if (enBtn) { enBtn.disabled = false; enBtn.textContent = '🌐 英文'; }
+        if (jaBtn) { jaBtn.disabled = false; jaBtn.textContent = '🎵 罗马音'; }
+      }
+    }
+
+    // ============ 代理设置 ============
+    async function loadProxySettings() {
+      try {
+        const res = await fetch('/api/proxy-settings');
+        const json = await res.json();
+        if (!json.success) return;
+        const d = json.data;
+        document.getElementById('cfg-proxy-enabled').checked = !!d.enabled;
+        document.getElementById('cfg-proxy-host').value = d.host || '';
+        document.getElementById('cfg-proxy-port').value = d.port || '';
+      } catch (e) { console.error('加载代理设置失败', e); }
+    }
+
+    async function saveProxySettings() {
+      const statusEl = document.getElementById('proxy-status');
+      const cfg = {
+        enabled: document.getElementById('cfg-proxy-enabled').checked,
+        host: document.getElementById('cfg-proxy-host').value.trim(),
+        port: document.getElementById('cfg-proxy-port').value.trim()
+      };
+      try {
+        const res = await fetch('/api/proxy-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cfg)
+        });
+        const json = await res.json();
+        if (json.success) {
+          statusEl.className = 'settings-status show ok';
+          statusEl.textContent = '✅ ' + json.message;
+        } else {
+          statusEl.className = 'settings-status show err';
+          statusEl.textContent = '❌ ' + json.message;
+        }
+      } catch (e) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '❌ 保存失败: ' + e.message;
+      }
+    }
+
+    async function testProxy() {
+      const statusEl = document.getElementById('proxy-status');
+      statusEl.className = 'settings-status show ok';
+      statusEl.textContent = '正在保存并测试...';
+      await saveProxySettings();
+      statusEl.textContent = '正在通过代理连接 IGDB...';
+      try {
+        // 保存后测试 IGDB 搜索
+        const res = await fetch('/api/search-covers?q=Mario&platform=switch');
+        const json = await res.json();
+        if (json.success && json.data && json.data.length > 0) {
+          statusEl.className = 'settings-status show ok';
+          statusEl.textContent = `✅ 代理正常! 找到 ${json.data.length} 个结果`;
+        } else {
+          statusEl.className = 'settings-status show err';
+          statusEl.textContent = '⚠️ 代理已保存,但搜索无结果,请检查代理地址和端口';
+        }
+      } catch (e) {
+        statusEl.className = 'settings-status show err';
+        statusEl.textContent = '❌ 代理测试失败: ' + e.message;
+      }
+    }
+
+    initConnection();
+  </script>
+</body>
+</html>
